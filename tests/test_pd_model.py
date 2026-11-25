@@ -98,3 +98,15 @@ def test_full_run_writes_the_report(tmp_path, monkeypatch):
     report = (tmp_path / "out" / "validation_report.md").read_text()
     assert "## Findings" in report and "Gini" in report
     assert (tmp_path / "out" / "points_table.csv").exists()
+
+
+def test_wrong_signed_variables_are_dropped():
+    # 'b' is safer on its own but riskier once 'a' is known: a classic suppressor that would
+    # get a positive coefficient, so the scorecard has to drop it.
+    rng = np.random.default_rng(5)
+    f, u = rng.normal(0, 1, 8000), rng.normal(0, 1, 8000)
+    df = pd.DataFrame({"a": f + 0.6 * u, "b": f})
+    y = (rng.random(8000) < 1 / (1 + np.exp(3 + 2 * u + 0.5 * f))).astype(int)
+    card = Scorecard(max_corr=1.0).fit(df, y)
+    assert card.dropped_ == ["b"]
+    assert (card.coefficients()["coefficient"] <= 0).all()

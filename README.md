@@ -40,7 +40,24 @@ Your own data works too: a CSV with numeric ratios and a `default` column (1 = d
 
 ## Results
 
-Run `python main.py` and paste the Findings section and the discrimination table from `outputs/validation_report.md` here, with the ROC and grade charts.
+UCI Taiwanese bankruptcy data: 6,819 firms, 3.2% defaulted, split 70/30 with the same default rate in both parts. All figures are on the 2,046-firm test sample.
+
+| | Scorecard | Challenger (gradient boosting) |
+|---|---|---|
+| AUC | 0.932 | 0.953 |
+| Gini | 0.864 | 0.905 |
+| KS | 0.709 | 0.797 |
+| Brier score | 0.0241 | 0.0225 |
+
+- **Variables:** nine ratios, led by persistent EPS, debt to net worth, borrowing dependency and the quick ratio. `net_value_per_share_c` was dropped because its coefficient came out with the wrong sign.
+- **Calibration:** Hosmer-Lemeshow statistic 8.76 (p = 0.36), so predicted and observed default rates agree across ten risk groups.
+- **Stability:** population stability index of 0.009 between the development and test samples.
+- **Rating grades:** no defaults in grades 1 to 3, then 0.35%, 1.0%, 3.4% and 18.1% in grades 4 to 7.
+- **Challenger:** ranks firms better (Gini 0.90 against 0.86), but the scorecard can be added up by hand from the points table, which is what a credit committee and a validator can check.
+
+![ROC curve](docs/roc.png)
+
+![Default rate by grade](docs/grades.png)
 
 ## Tests
 
@@ -69,6 +86,8 @@ The tests check the sign and size of the weight of evidence, that ranges are lea
 - The public data has no dates, so the test sample is a random hold-out rather than a later period.
 - Default means a bankruptcy filing, not the 90-days-past-due definition used under Basel rules.
 - PDs reflect this sample's default rate and would be recalibrated to a portfolio's long-run rate before use.
+- Some bins are not monotonic in weight of evidence (borrowing dependency, quick ratio, tax rate), and two variables (tax rate, operating profit per person) move the score by four points at most. A production scorecard would merge those bins or drop those variables.
+- Grades 1 to 3 have no defaults in the test sample, so their PDs rest on very few observations and would need a floor.
 
 ## Data
 

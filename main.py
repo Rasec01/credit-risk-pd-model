@@ -40,6 +40,8 @@ def main():
     grades = v.rating_grades(dev_scores, test_scores, y_test)
     cal = v.calibration_table(y_test, pd_card)
     found = v.findings(s, grades)
+    if card.dropped_:
+        found.append("Dropped for a positive (wrong-signed) coefficient: " + ", ".join(card.dropped_) + ".")
     sh = shap_values(chal, X_test)
 
     charts(out, y_test, pd_card, pd_chal, cal, dev_scores, test_scores, grades, sh if sh[0] is not None else None)

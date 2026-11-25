@@ -112,4 +112,4 @@ Population stability index of the score, development vs test: **{s['psi']:.3f}**
 - Default here means a bankruptcy filing, not the 90-days-past-due definition used under Basel.
 - The sample's default rate need not match a lending portfolio's; PDs would be recalibrated to the portfolio's long-run default rate before use.
 """
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8")

@@ -83,8 +83,16 @@ class Scorecard:
         self.features_ = select_features(self.binner, X_woe, self.min_iv, self.max_corr, self.max_features)
         if not self.features_:
             raise ValueError("No ratio reaches the minimum information value.")
-        self.model_ = LogisticRegression(C=1.0, max_iter=1000).fit(X_woe[self.features_], y)
-        return self
+        # A scorecard variable must push the score the right way: higher WoE (safer bin) has to lower
+        # the PD. A positive coefficient means the ratio is mostly repeating information already carried
+        # by a correlated variable, so it is dropped and the model refitted until every sign is right.
+        self.dropped_ = []
+        while True:
+            self.model_ = LogisticRegression(C=1.0, max_iter=1000).fit(X_woe[self.features_], y)
+            coef = self.model_.coef_[0]
+            if coef.max() <= 0 or len(self.features_) == 1:
+                return self
+            self.dropped_.append(self.features_.pop(int(coef.argmax())))
 
     def predict_pd(self, X: pd.DataFrame) -> np.ndarray:
         return self.model_.predict_proba(self.binner.transform(X, self.features_))[:, 1]
